@@ -4,6 +4,24 @@
 
 A Helm chart to delete pods with errors
 
+# Table of Contents
+<!-- TOC -->
+
+- [helm-watchdog-pod-delete](#helm-watchdog-pod-delete)
+- [Table of Contents](#table-of-contents)
+- [Prerequisites](#prerequisites)
+- [Installing the Chart](#installing-the-chart)
+  - [Grant Identity Permissions in GKE (Workload Identity)](#grant-identity-permissions-in-gke-workload-identity)
+- [Uninstalling the Chart](#uninstalling-the-chart)
+- [Motivation and use cases](#motivation-and-use-cases)
+  - [Problem Statement](#problem-statement)
+  - [Solution](#solution)
+  - [Use Cases](#use-cases)
+- [How It Works](#how-it-works)
+- [Parameters](#parameters)
+
+<!-- TOC -->
+
 # Prerequisites
 
 - Install the kubectl, helm and helm-docs commands following the instructions of the file [REQUIREMENTS.md](../../REQUIREMENTS.md).
@@ -14,23 +32,34 @@ A Helm chart to delete pods with errors
 
 - Change the values according to the need of the environment in ``helm-watchdog-pod-delete/values.yaml`` file. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-- Clone this repository.
+Add Helm repository:
 
 ```bash
-git clone https://github.com/aeciopires/helm-watchdog-pod-delete
-cd helm-watchdog-pod-delete/charts/
+helm repo add helm-watchdog-pod-delete https://aeciopires.github.io/helm-watchdog-pod-delete
+```
+
+Update the list helm charts available for installation. This is recommend prior to installation/upgrade:
+
+```bash
+helm repo update
+```
+
+Get all versions of helm chart:
+
+```bash
+helm search repo helm-watchdog-pod-delete/helm-watchdog-pod-delete -l
 ```
 
 - Test the installation with command:
 
 ```bash
-helm upgrade --install helm-watchdog-pod-delete -f helm-watchdog-pod-delete/values.yaml helm-watchdog-pod-delete/ -n helm-watchdog-pod-delete --create-namespace --dry-run
+helm upgrade --install helm-watchdog-pod-delete -f values.yaml helm-watchdog-pod-delete/helm-watchdog-pod-delete -n helm-watchdog-pod-delete --create-namespace --dry-run
 ```
 
 - To install/upgrade the chart with the release name `helm-watchdog-pod-delete`:
 
 ```bash
-helm upgrade --install helm-watchdog-pod-delete -f helm-watchdog-pod-delete/values.yaml helm-watchdog-pod-delete/ -n helm-watchdog-pod-delete --create-namespace
+helm upgrade --install helm-watchdog-pod-delete -f values.yaml helm-watchdog-pod-delete/helm-watchdog-pod-delete -n helm-watchdog-pod-delete --create-namespace
 ```
 
 See logs of pod with the follow command:

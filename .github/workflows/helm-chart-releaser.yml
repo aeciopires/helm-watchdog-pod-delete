@@ -1,0 +1,49 @@
+name: Release Charts
+
+# References:
+# https://blog.bradmccoy.io/linking-helm-charts-in-github-pages-to-artifacthub-46e02e19abfe
+# https://github.com/helm/chart-releaser-action
+# https://helm.sh/docs/howto/chart_releaser_action/
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+# https://medium.com/@blackhorseya/step-by-step-guide-to-hosting-your-own-helm-chart-registry-on-github-pages-c37809a1d93f
+# https://helm.sh/docs/topics/chart_repository/
+# https://intverse.medium.com/helm-chart-repository-with-github-pages-225b0b01195c
+
+on:
+  push:
+    # Sequence of patterns matched against refs/heads
+    #branches:
+    #  - main
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '*'
+
+jobs:
+  release:
+    # depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
+    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.17.2
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          charts_dir: charts
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
