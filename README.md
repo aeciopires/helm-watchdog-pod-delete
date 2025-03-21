@@ -14,7 +14,7 @@
 
 Helm chart to delete pods with errors
 
-See more informations in [charts/helm-watchdog-pod-delete/README.md](charts/helm-watchdog-pod-delete/README.md)
+See more information in [charts/helm-watchdog-pod-delete/README.md](charts/helm-watchdog-pod-delete/README.md)
 
 ## Contributing
 
