@@ -8,6 +8,7 @@
 - [helm-watchdog-pod-delete](#helm-watchdog-pod-delete)
   - [About](#about)
   - [Contributing](#contributing)
+  - [Contributors](#contributors)
   - [Maintainers](#maintainers)
   - [License](#license)
 
@@ -23,6 +24,16 @@ See more information in [charts/helm-watchdog-pod-delete/README.md](charts/helm-
 
 1. See [CONTRIBUTING.md](CONTRIBUTING.md) file.
 2. See [REQUIREMENTS.md](REQUIREMENTS.md) file.
+
+## Contributors
+
+<a href = "https://github.com/aeciopires/helm-watchdog-pod-delete/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=aeciopires/helm-watchdog-pod-delete"/>
+</a>
+
+Made with [contributors-img](https://contrib.rocks).
+
+<!-- Reference: https://github.com/Tanu-N-Prabhu/myWebsite.io/blob/master/Docs/Displaying%20Contributors%20Image%20on%20README%20files%20with%20no%20Pain!.md#contributors-displayed-by-using-contributors-img-on-the-readmemd-file -->
 
 ## Maintainers
 
