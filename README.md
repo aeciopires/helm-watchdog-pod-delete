@@ -8,6 +8,7 @@
 - [helm-watchdog-pod-delete](#helm-watchdog-pod-delete)
   - [About](#about)
   - [Contributing](#contributing)
+  - [Important links](#important-links)
   - [Contributors](#contributors)
   - [Maintainers](#maintainers)
   - [License](#license)
@@ -24,6 +25,16 @@ See more information in [charts/helm-watchdog-pod-delete/README.md](charts/helm-
 
 1. See [CONTRIBUTING.md](CONTRIBUTING.md) file.
 2. See [REQUIREMENTS.md](REQUIREMENTS.md) file.
+
+## Important links
+
+- Open issue, bug or feature request: https://github.com/aeciopires/helm-watchdog-pod-delete/issues
+- Ask help: https://github.com/aeciopires/helm-watchdog-pod-delete/discussions
+- Releases and Changelog: https://github.com/aeciopires/helm-watchdog-pod-delete/releases
+- Artifact Hub: artifacthub.io/packages/helm/helm-watchdog-pod-delete/helm-watchdog-pod-delete
+- Closed issues: https://github.com/aeciopires/helm-watchdog-pod-delete/issues?q=is%3Aissue+is%3Aclosed
+- Closed PRs: https://github.com/aeciopires/helm-watchdog-pod-delete/pulls?q=is%3Apr+is%3Aclosed
+- Download statistics: https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete
 
 ## Contributors
 

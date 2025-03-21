@@ -4,6 +4,8 @@
   - [Essential](#essential)
   - [Optionals](#optionals)
 - [asdf](#asdf)
+- [docker](#docker)
+- [docker-compose](#docker-compose)
 - [Helm](#helm)
 - [Helm Docs](#helm-docs)
 - [Install Kubectl](#install-kubectl)
@@ -63,6 +65,39 @@ source ~/.bashrc
 ```
 
 Reference: https://asdf-vm.com/guide/introduction.html
+
+# docker
+
+Install Docker CE (Community Edition) following the instructions on the page: <https://docs.docker.com/engine/install/ubuntu/>.
+
+```bash
+sudo apt update
+sudo apt install -y acl
+curl -fsSL https://get.docker.com -o get-docker.sh;
+sudo sh get-docker.sh;
+# Utilizando docker sem sudo
+sudo usermod -aG docker $USER;
+sudo setfacl -m user:$USER:rw /var/run/docker.sock
+```
+
+Reference: <https://docs.docker.com/engine/install/linux-postinstall/#configure-docker-to-start-on-boot>
+
+# docker-compose
+
+Documentation: <https://docs.docker.com/compose/>
+
+```bash
+sudo su
+COMPOSE_VERSION=v2.33.1
+
+sudo curl -L "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose;
+
+chmod +x /usr/local/bin/docker-compose;
+
+/usr/local/bin/docker-compose version
+
+exit
+```
 
 # Helm
 

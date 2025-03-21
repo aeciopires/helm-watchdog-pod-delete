@@ -4,6 +4,8 @@
   - [Homebrew](#homebrew)
   - [Essentials](#essentials)
 - [asdf](#asdf)
+- [docker](#docker)
+- [docker-compose](#docker-compose)
 - [Helm](#helm)
 - [Helm Docs](#helm-docs)
 - [Install Kubectl](#install-kubectl)
@@ -92,6 +94,33 @@ source ~/.bash_profile
 ```
 
 Reference: https://asdf-vm.com/guide/introduction.html
+
+# docker
+
+Install Docker CE (Community Edition) following the instructions on the page: https://docs.docker.com/desktop/install/mac-install/.
+
+Run the following commands:
+
+> Before proceeding, make sure you have installed the command [Homebrew](#homebrew).
+
+```bash
+brew install --cask docker
+brew install docker-machine
+```
+
+Reference: https://stackoverflow.com/questions/44084846/cannot-connect-to-the-docker-daemon-on-macos
+
+# docker-compose
+
+More info: https://docs.docker.com/compose/install/
+
+Run the following command:
+
+> Before proceeding, make sure you have installed the command [Homebrew](#homebrew).
+
+```bash
+brew install docker-compose
+```
 
 # Helm
 
