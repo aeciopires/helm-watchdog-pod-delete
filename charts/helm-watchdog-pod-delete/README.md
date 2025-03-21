@@ -1,6 +1,7 @@
 # helm-watchdog-pod-delete
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
+)](https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete)
 
 A Helm chart to delete pods with errors
 

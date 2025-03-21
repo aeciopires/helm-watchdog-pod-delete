@@ -1,5 +1,8 @@
 # helm-watchdog-pod-delete
 
+[![License](https://img.shields.io/badge/license-GPLv3-blue)](https://opensource.org/license/gpl-3-0) [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
+)](https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete)
+
 <!-- TOC -->
 
 - [helm-watchdog-pod-delete](#helm-watchdog-pod-delete)
