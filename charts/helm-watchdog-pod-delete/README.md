@@ -14,6 +14,7 @@ A Helm chart to delete pods with errors
 - [Installing the Chart](#installing-the-chart)
   - [Grant Identity Permissions in GKE (Workload Identity)](#grant-identity-permissions-in-gke-workload-identity)
 - [Uninstalling the Chart](#uninstalling-the-chart)
+- [Changelog](#changelog)
 - [Motivation and use cases](#motivation-and-use-cases)
   - [Problem Statement](#problem-statement)
   - [Solution](#solution)
@@ -100,6 +101,10 @@ To uninstall/delete the `helm-watchdog-pod-delete` deployment:
 helm uninstall helm-watchdog-pod-delete -n helm-watchdog-pod-delete
 ```
 
+# Changelog
+
+See https://github.com/aeciopires/helm-watchdog-pod-delete/releases
+
 # Motivation and use cases
 
 ## Problem Statement
@@ -157,29 +162,27 @@ Change the values according to the need of the environment in ``helm-watchdog-po
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` |  |
-| fullnameOverride | string | `""` |  |
+| affinity | object | `{}` | Affinity configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
+| fullnameOverride | string | `""` | Completely replaces the rest of the logic in the template. Reference: https://stackoverflow.com/questions/63838705/what-is-the-difference-between-fullnameoverride-and-nameoverride-in-helm |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"bitnami/kubectl","tag":"1.32"}` | Image configuration. |
 | image.pullPolicy | string | `"IfNotPresent"` | Pull policy image |
 | image.repository | string | `"bitnami/kubectl"` | Image repository. |
 | image.tag | string | `"1.32"` | Image tag. |
-| imagePullSecrets | list | `[]` |  |
-| nameOverride | string | `""` |  |
-| nodeSelector | object | `{}` |  |
-| podAnnotations | object | `{}` |  |
-| podLabels | object | `{}` |  |
-| podSecurityContext | object | `{}` |  |
+| imagePullSecrets | list | `[]` | Reference to one or more secrets to be used when pulling images.  For example:  imagePullSecrets:    - name: "image-pull-secret" |
+| nameOverride | string | `""` | Replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names. Reference: https://stackoverflow.com/questions/63838705/what-is-the-difference-between-fullnameoverride-and-nameoverride-in-helm |
+| nodeSelector | object | `{}` | nodeSelector configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
+| podAnnotations | object | `{}` | Annotations to add to the pods |
+| podLabels | object | `{}` | Labels to add to the pod |
+| podSecurityContext | object | `{}` | Pod security configurations |
 | replicaCount | int | `1` | Replica count. |
-| resources.limits.memory | string | `"128Mi"` |  |
-| resources.requests.cpu | string | `"50m"` |  |
-| resources.requests.memory | string | `"10Mi"` |  |
-| securityContext | object | `{}` |  |
+| resources | object | `{"limits":{"memory":"128Mi"},"requests":{"cpu":"50m","memory":"10Mi"}}` | Resource requests and limits for the pod |
+| securityContext | object | `{}` | Security Context configurations. Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| terminationGracePeriodSeconds | int | `30` |  |
-| tolerations | list | `[]` |  |
+| terminationGracePeriodSeconds | int | `30` | Time to wait pod delete. Reference: https://cloud.google.com/blog/products/containers-kubernetes/kubernetes-best-practices-terminating-with-grace |
+| tolerations | list | `[]` | Tolerations configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | volumeMounts | list | `[{"mountPath":"/var/run/secrets/kubernetes.io/serviceaccount","name":"kube-api-access","readOnly":true}]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[{"name":"kube-api-access","projected":{"sources":[{"serviceAccountToken":{"path":"token"}},{"configMap":{"items":[{"key":"ca.crt","path":"ca.crt"}],"name":"kube-root-ca.crt"}}]}}]` | Additional volumes on the output Deployment definition. |
 | watchdog | object | `{"checkInterval":120,"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |

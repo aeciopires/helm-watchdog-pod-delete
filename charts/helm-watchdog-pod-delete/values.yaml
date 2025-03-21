@@ -10,10 +10,18 @@ image:
   # -- Image tag.
   tag: "1.32"
 
+# -- Reference to one or more secrets to be used when pulling images.
+#
+# For example:
+#  imagePullSecrets:
+#    - name: "image-pull-secret"
 imagePullSecrets: []
+# -- Replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names. Reference: https://stackoverflow.com/questions/63838705/what-is-the-difference-between-fullnameoverride-and-nameoverride-in-helm
 nameOverride: ""
+# -- Completely replaces the rest of the logic in the template. Reference: https://stackoverflow.com/questions/63838705/what-is-the-difference-between-fullnameoverride-and-nameoverride-in-helm
 fullnameOverride: ""
 
+# -- Time to wait pod delete. Reference: https://cloud.google.com/blog/products/containers-kubernetes/kubernetes-best-practices-terminating-with-grace
 terminationGracePeriodSeconds: 30
 
 # -- Watchdog configuration.
@@ -51,12 +59,17 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Annotations to add to the pods
 podAnnotations: {}
+
+# -- Labels to add to the pod
 podLabels: {}
 
+# -- Pod security configurations
 podSecurityContext: {}
   # fsGroup: 2000
 
+# -- Security Context configurations. Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 securityContext: {}
   # capabilities:
   #   drop:
@@ -65,6 +78,7 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+# -- Resource requests and limits for the pod
 resources:
   limits:
     memory: 128Mi
@@ -94,8 +108,11 @@ volumeMounts:
     mountPath: /var/run/secrets/kubernetes.io/serviceaccount
     readOnly: true
 
+# -- nodeSelector configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 nodeSelector: {}
 
+# -- Tolerations configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 tolerations: []
 
+# -- Affinity configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 affinity: {}

@@ -13,6 +13,7 @@
 - [Installing the Chart](#installing-the-chart)
   - [Grant Identity Permissions in GKE (Workload Identity)](#grant-identity-permissions-in-gke-workload-identity)
 - [Uninstalling the Chart](#uninstalling-the-chart)
+- [Changelog](#changelog)
 - [Motivation and use cases](#motivation-and-use-cases)
   - [Problem Statement](#problem-statement)
   - [Solution](#solution)
@@ -98,6 +99,10 @@ To uninstall/delete the `{{ template "chart.name" . }}` deployment:
 ```bash
 helm uninstall {{ template "chart.name" . }} -n {{ template "chart.name" . }}
 ```
+
+# Changelog
+
+See https://github.com/aeciopires/helm-watchdog-pod-delete/releases
 
 # Motivation and use cases
 
