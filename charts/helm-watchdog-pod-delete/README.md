@@ -62,7 +62,7 @@ GCP_SERVICE_ACCOUNT@PROJECT.iam.gserviceaccount.com \
 
 - This allows the container to use correct credentials within the cluster.
 
-## Uninstalling the Chart
+# Uninstalling the Chart
 
 To uninstall/delete the `helm-watchdog-pod-delete` deployment:
 
@@ -70,7 +70,56 @@ To uninstall/delete the `helm-watchdog-pod-delete` deployment:
 helm uninstall helm-watchdog-pod-delete -n helm-watchdog-pod-delete
 ```
 
-## Parameters
+# Motivation and use cases
+
+## Problem Statement
+
+In Kubernetes, applications running as Pods may sometimes enter an undesired state such as ``CrashLoopBackOff`` or ``Error``. This can happen due to various reasons like memory leaks, unhandled exceptions, or external dependencies failing.
+
+By default, Kubernetes restarts **containers** inside a Pod but does not recreate the entire **Pod** itself. This can lead to issues where the Pod remains stuck in a broken state and requires manual intervention.
+
+Additionally, ``sidecars`` and ``initContainers`` can introduce challenges:
+
+- ``Sidecar containers`` may fail, but Kubernetes only restarts the main application container, leaving the Pod in a partially functional state.
+- ``InitContainers`` run only during Pod creation, so if they depend on external services that were unavailable at the time, the Pod can become stuck.
+- ``Race conditions with external dependencies`` (e.g., external secrets, databases, message brokers, or API services) may cause startup failures that require a full Pod restart.
+
+## Solution
+
+The **Helm Watchdog Pod Restart** is a lightweight monitoring solution that:
+
+- Periodically monitors all Pods in specified namespaces.
+- Detects Pods that are in a CrashLoopBackOff or Error state.
+- Automatically deletes these Pods, triggering a fresh restart.
+- Supports monitoring all namespaces or a specific list of namespaces.
+- Allows excluding certain namespaces (e.g., kube-system, monitoring).
+- Ensures sidecar containers and initContainers are properly restarted when needed.
+- Helps mitigate race conditions by ensuring Pods are recreated when external dependencies become available.
+- Runs as a Kubernetes Deployment using a bitnami/kubectl container.
+- Uses Helm for easy deployment and configuration.
+
+## Use Cases
+
+This solution is useful for:
+
+- Ensuring high availability of applications by automatically recovering failed Pods.
+- Reducing manual intervention, avoiding the need for SREs/DevOps engineers to manually restart Pods.
+- Handling intermittent failures in microservices-based architectures.
+- Automating Pod recovery in multi-tenant clusters where different teams manage different namespaces.
+- Fixing issues with ``sidecars`` and ``initContainers`` by ensuring Pods are fully restarted instead of remaining in a partially functional state.
+- Resolving race conditions caused by unavailable external dependencies at startup, ensuring that Pods retry initialization when dependencies are ready.
+
+# How It Works
+
+The watchdog runs as a single Deployment in Kubernetes.
+
+It continuously checks for Pods in a CrashLoopBackOff or Error state.
+
+When it finds a failed Pod, it deletes it, allowing Kubernetes to schedule a new Pod (if managed by ReplicaSet, Deployment, DemonSet or StatefulSet).
+
+The monitoring interval and namespace filtering can be configured via Helm values.
+
+# Parameters
 
 The following tables lists the configurable parameters of the chart and their default values.
 
