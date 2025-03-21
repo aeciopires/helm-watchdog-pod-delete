@@ -1,0 +1,8 @@
+# Artifact Hub repository metadata file
+# Reference: 
+# https://github.com/artifacthub/hub/blob/master/docs/metadata/artifacthub-repo.yml
+# https://leeyoongti.medium.com/helm-in-kubernetes-part-4-publish-helm-chart-to-artifact-hub-using-github-pages-ab7f55904faa
+repositoryID: be64cf26-d35b-406b-9bc1-81a84461edcf
+owners:
+  - name: aeciopires
+    email: https://blog.aeciopires.com/contato

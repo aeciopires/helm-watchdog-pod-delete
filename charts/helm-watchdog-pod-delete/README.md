@@ -1,6 +1,6 @@
 # helm-watchdog-pod-delete
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
 )](https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete)
 
 A Helm chart to delete pods with errors
@@ -182,8 +182,8 @@ Change the values according to the need of the environment in ``helm-watchdog-po
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[{"mountPath":"/var/run/secrets/kubernetes.io/serviceaccount","name":"kube-api-access","readOnly":true}]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[{"name":"kube-api-access","projected":{"sources":[{"serviceAccountToken":{"path":"token"}},{"configMap":{"items":[{"key":"ca.crt","path":"ca.crt"}],"name":"kube-root-ca.crt"}}]}}]` | Additional volumes on the output Deployment definition. |
-| watchdog | object | `{"checkInterval":120,"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","zora-system","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |
+| watchdog | object | `{"checkInterval":120,"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |
 | watchdog.checkInterval | int | `120` | Interval in seconds to check pods. |
 | watchdog.errorStatuses | string | `"CrashLoopBackOff|Error|OOMKilled"` | List of error pod statuses. |
-| watchdog.excludeNamespaces | list | `["default","zora-system","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"]` | List of namespaces that should be ignored |
+| watchdog.excludeNamespaces | list | `["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"]` | List of namespaces that should be ignored |
 | watchdog.namespaces | list | `[]` | List of namespaces to monitor. If empty, monitor all. |

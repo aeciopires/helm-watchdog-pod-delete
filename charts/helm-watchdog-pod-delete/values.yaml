@@ -30,7 +30,6 @@ watchdog:
   # -- List of namespaces that should be ignored
   excludeNamespaces:
     - "default"
-    - "zora-system"
     - "helm-watchdog-pod-delete"
     - "kube-system"
     - "kube-node-lease"
