@@ -1,0 +1,2 @@
+1. See the logs of {{ .Release.Name }}
+  kubectl logs -f deploy/{{ .Release.Name }} --namespace {{ .Release.Namespace }}

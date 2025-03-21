@@ -1,0 +1,102 @@
+# -- Replica count.
+replicaCount: 1
+
+# -- Image configuration.
+image:
+  # -- Image repository.
+  repository: bitnami/kubectl
+  # -- Pull policy image
+  pullPolicy: IfNotPresent
+  # -- Image tag.
+  tag: "1.32"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+terminationGracePeriodSeconds: 30
+
+# -- Watchdog configuration.
+watchdog:
+  # -- Interval in seconds to check pods.
+  checkInterval: 120
+  # -- List of error pod statuses.
+  errorStatuses: "CrashLoopBackOff|Error|OOMKilled"
+  # -- List of namespaces to monitor. If empty, monitor all.
+  namespaces: []
+    #- "namespace1"
+    #- "namespace2"
+    #- "namespace3"
+  # -- List of namespaces that should be ignored
+  excludeNamespaces:
+    - "default"
+    - "zora-system"
+    - "helm-watchdog-pod-delete"
+    - "kube-system"
+    - "kube-node-lease"
+    - "kube-public"
+    - "gke-managed-cim"
+    - "gke-managed-filestorecsi"
+    - "gke-managed-system"
+    - "gmp-public"
+    - "gmp-system"
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 10Mi
+
+#livenessProbe: {}
+#readinessProbe: {}
+
+# -- Additional volumes on the output Deployment definition.
+volumes:
+  - name: kube-api-access
+    projected:
+      sources:
+        - serviceAccountToken:
+            path: token
+        - configMap:
+            name: kube-root-ca.crt
+            items:
+              - key: ca.crt
+                path: ca.crt
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts:
+  - name: kube-api-access
+    mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+    readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-watchdog-pod-delete.fullname" . }}
+  labels:
+    {{- include "helm-watchdog-pod-delete.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "helm-watchdog-pod-delete.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "helm-watchdog-pod-delete.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "helm-watchdog-pod-delete.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: watchdog
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[INFO] Starting the watchdog..."
+              echo "[INFO] Monitoring pods with errors..."
+              
+              # Configurable variables via Helm
+              NAMESPACES="{{ .Values.watchdog.namespaces | join " " }}"
+              EXCLUDE_NAMESPACES="{{ .Values.watchdog.excludeNamespaces | join " " }}"
+              INTERVAL="{{ .Values.watchdog.checkInterval }}"
+              ERROR_STATUSES="{{ .Values.watchdog.errorStatuses | join " " }}"
+
+              # Function to check if a namespace should be ignored
+              should_exclude() {
+                local ns="$1"
+                for ex_ns in $EXCLUDE_NAMESPACES; do
+                  if [ "$ns" = "$ex_ns" ]; then
+                    return 0  # It's true, should be ignored
+                  fi
+                done
+                return 1  # It's false, should be monitored
+              }
+
+              while true; do
+                
+                if [ -z "$NAMESPACES" ]; then
+                  # Monitoring all namespaces except excluded ones
+                  kubectl get pods --all-namespaces --no-headers | awk '{print $1, $2, $4}' | while read ns pod status; do
+                    if should_exclude "$ns"; then
+                      continue
+                    fi
+                    if echo "$status" | grep -qE "$ERROR_STATUSES"; then
+                      echo "[WARNING] Recreating pod: $pod in namespace: $ns"
+                      kubectl delete pod $pod -n $ns
+                    fi
+                  done
+                else
+                  # Monitoring only the specified namespaces
+                  for ns in $NAMESPACES; do
+                    if should_exclude "$ns"; then
+                      continue
+                    fi
+                    kubectl get pods -n "$ns" --no-headers | awk '{print $1, $3}' | while read pod status; do
+                      if echo "$status" | grep -qE "$ERROR_STATUSES"; then
+                        echo "[WARNING] Recreating pod: $pod in namespace: $ns"
+                        kubectl delete pod $pod -n $ns
+                      fi
+                    done
+                  done
+                fi
+                
+                sleep "$INTERVAL"
+              done
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

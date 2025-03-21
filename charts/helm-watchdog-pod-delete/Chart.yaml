@@ -1,0 +1,15 @@
+apiVersion: v2 # Don't change this
+name: helm-watchdog-pod-delete
+description: A Helm chart to delete pods with errors
+keywords:
+  - monitoring
+  - kubernetes
+  - helm
+type: application
+version: 0.1.0
+appVersion: "0.0.0"
+sources:
+  - https://github.com/aeciopires/helm-watchdog-pod-delete
+maintainers:
+  - name: Aecio Pires
+    url: https://github.com/aeciopires

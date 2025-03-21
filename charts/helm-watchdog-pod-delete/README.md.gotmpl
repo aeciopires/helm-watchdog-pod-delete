@@ -1,0 +1,78 @@
+{{ template "chart.header" . }}
+{{ template "chart.typeBadge" . }} {{ template "chart.versionBadge" . }}
+
+{{ template "chart.description" . }}
+
+# Prerequisites
+
+- Install the kubectl, helm and helm-docs commands following the instructions of the file [REQUIREMENTS.md](../../REQUIREMENTS.md).
+
+# Installing the Chart
+
+- Access a Kubernetes cluster.
+
+- Change the values according to the need of the environment in ``{{ template "chart.name" . }}/values.yaml`` file. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+
+- Clone this repository.
+
+```bash
+git clone https://github.com/aeciopires/helm-watchdog-pod-delete
+cd helm-watchdog-pod-delete/charts/
+```
+
+- Test the installation with command:
+
+```bash
+helm upgrade --install {{ template "chart.name" . }} -f {{ template "chart.name" . }}/values.yaml {{ template "chart.name" . }}/ -n {{ template "chart.name" . }} --create-namespace --dry-run
+```
+
+- To install/upgrade the chart with the release name `{{ template "chart.name" . }}`:
+
+```bash
+helm upgrade --install {{ template "chart.name" . }} -f {{ template "chart.name" . }}/values.yaml {{ template "chart.name" . }}/ -n {{ template "chart.name" . }} --create-namespace
+```
+
+See logs of pod with the follow command:
+
+```bash
+kubectl logs -f deploy/{{ template "chart.name" . }} -n {{ template "chart.name" . }}
+```
+
+## Grant Identity Permissions in GKE (Workload Identity)
+
+In GKE, access to the cluster may be managed by Workload Identity (instead of the default Kubernetes ServiceAccounts).
+
+To fix this:
+
+- Enable Workload Identity (if required)
+- If Workload Identity is enabled in GKE, the Kubernetes ServiceAccount must be linked to a Google Cloud ServiceAccount:
+
+```bash
+# Link the Kubernetes ServiceAccount to the GCP ServiceAccount
+gcloud iam service-accounts add-iam-policy-binding \
+GCP_SERVICE_ACCOUNT@PROJECT.iam.gserviceaccount.com \
+--role roles/iam.workloadIdentityUser \
+--member "serviceAccount:PROJECT.svc.id.goog[{{ template "chart.name" . }}/{{ template "chart.name" . }}]"
+```
+
+- Replace:
+  - GCP_SERVICE_ACCOUNT with the Google Cloud ServiceAccount.
+  - PROJECT with your project ID.
+
+- This allows the container to use correct credentials within the cluster.
+
+## Uninstalling the Chart
+
+To uninstall/delete the `{{ template "chart.name" . }}` deployment:
+
+```bash
+helm uninstall {{ template "chart.name" . }} -n {{ template "chart.name" . }}
+```
+
+## Parameters
+
+The following tables lists the configurable parameters of the chart and their default values.
+
+Change the values according to the need of the environment in ``{{ template "chart.name" . }}/values.yaml`` file.
+
+{{ template "chart.valuesTable" . }}
