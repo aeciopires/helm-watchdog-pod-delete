@@ -47,6 +47,15 @@ watchdog:
     - "gke-managed-system"
     - "gmp-public"
     - "gmp-system"
+  # -- Grant the same permissions to watchdog pod. More info: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+  clusterRole:
+    rules:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["get", "list", "delete"]
+      - apiGroups: [""]
+        resources: ["namespaces"]
+        verbs: ["get", "list"]
 
 serviceAccount:
   # -- Specifies whether a service account should be created

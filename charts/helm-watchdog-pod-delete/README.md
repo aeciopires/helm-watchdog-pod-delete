@@ -1,6 +1,6 @@
 # helm-watchdog-pod-delete
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
 )](https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete)
 
 A Helm chart to delete pods with errors
@@ -12,6 +12,7 @@ A Helm chart to delete pods with errors
 - [Table of Contents](#table-of-contents)
 - [Prerequisites](#prerequisites)
 - [Installing the Chart](#installing-the-chart)
+  - [Testing the Watchdog](#testing-the-watchdog)
   - [Grant Identity Permissions in GKE (Workload Identity)](#grant-identity-permissions-in-gke-workload-identity)
 - [Uninstalling the Chart](#uninstalling-the-chart)
 - [Changelog](#changelog)
@@ -64,10 +65,27 @@ helm upgrade --install helm-watchdog-pod-delete -f values.yaml helm-watchdog-pod
 helm upgrade --install helm-watchdog-pod-delete -f values.yaml helm-watchdog-pod-delete/helm-watchdog-pod-delete -n helm-watchdog-pod-delete --create-namespace
 ```
 
-See logs of pod with the follow command:
+## Testing the Watchdog
+
+Create a crashed Pod to see if the watchdog works correctly:
+
+```bash
+kubectl create namespace test-crash
+kubectl run test-crash --image=busybox --restart=Never -n test-crash -- /bin/sh -c "exit 1"
+```
+
+See logs of watchdog pod with the follow command:
 
 ```bash
 kubectl logs -f deploy/helm-watchdog-pod-delete -n helm-watchdog-pod-delete
+```
+
+If everything is ok, the watchdog will display:
+
+```bash
+[INFO] Starting the watchdog...
+[INFO] Monitoring pods with errors...
+[WARNING] Deleting pod: test-crash in namespace: test-crash
 ```
 
 ## Grant Identity Permissions in GKE (Workload Identity)
@@ -109,7 +127,7 @@ See https://github.com/aeciopires/helm-watchdog-pod-delete/releases
 
 ## Problem Statement
 
-In Kubernetes, applications running as Pods may sometimes enter an undesired state such as ``CrashLoopBackOff`` or ``Error``. This can happen due to various reasons like memory leaks, unhandled exceptions, or external dependencies failing.
+In Kubernetes, applications running as Pods may sometimes enter an undesired state such as ``CrashLoopBackOff`` or ``Error`` (for example). This can happen due to various reasons like memory leaks, unhandled exceptions, or external dependencies failing.
 
 By default, Kubernetes restarts **containers** inside a Pod but does not recreate the entire **Pod** itself. This can lead to issues where the Pod remains stuck in a broken state and requires manual intervention.
 
@@ -124,7 +142,7 @@ Additionally, ``sidecars`` and ``initContainers`` can introduce challenges:
 The **Helm Watchdog Pod Restart** is a lightweight monitoring solution that:
 
 - Periodically monitors all Pods in specified namespaces.
-- Detects Pods that are in a CrashLoopBackOff or Error state.
+- Detects Pods that are in a CrashLoopBackOff or Error state (for example).
 - Automatically deletes these Pods, triggering a fresh restart.
 - Supports monitoring all namespaces or a specific list of namespaces.
 - Allows excluding certain namespaces (e.g., kube-system, monitoring).
@@ -185,8 +203,9 @@ Change the values according to the need of the environment in ``helm-watchdog-po
 | tolerations | list | `[]` | Tolerations configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | volumeMounts | list | `[{"mountPath":"/var/run/secrets/kubernetes.io/serviceaccount","name":"kube-api-access","readOnly":true}]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[{"name":"kube-api-access","projected":{"sources":[{"serviceAccountToken":{"path":"token"}},{"configMap":{"items":[{"key":"ca.crt","path":"ca.crt"}],"name":"kube-root-ca.crt"}}]}}]` | Additional volumes on the output Deployment definition. |
-| watchdog | object | `{"checkInterval":120,"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |
+| watchdog | object | `{"checkInterval":120,"clusterRole":{"rules":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","delete"]},{"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list"]}]},"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |
 | watchdog.checkInterval | int | `120` | Interval in seconds to check pods. |
+| watchdog.clusterRole | object | `{"rules":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","delete"]},{"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list"]}]}` | Grant the same permissions to watchdog pod. More info: https://kubernetes.io/docs/reference/access-authn-authz/rbac/ |
 | watchdog.errorStatuses | string | `"CrashLoopBackOff|Error|OOMKilled"` | List of error pod statuses. |
 | watchdog.excludeNamespaces | list | `["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"]` | List of namespaces that should be ignored |
 | watchdog.namespaces | list | `[]` | List of namespaces to monitor. If empty, monitor all. |

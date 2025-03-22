@@ -11,6 +11,7 @@
 - [Table of Contents](#table-of-contents)
 - [Prerequisites](#prerequisites)
 - [Installing the Chart](#installing-the-chart)
+  - [Testing the Watchdog](#testing-the-watchdog)
   - [Grant Identity Permissions in GKE (Workload Identity)](#grant-identity-permissions-in-gke-workload-identity)
 - [Uninstalling the Chart](#uninstalling-the-chart)
 - [Changelog](#changelog)
@@ -63,10 +64,27 @@ helm upgrade --install {{ template "chart.name" . }} -f values.yaml {{ template 
 helm upgrade --install {{ template "chart.name" . }} -f values.yaml {{ template "chart.name" . }}/{{ template "chart.name" . }} -n {{ template "chart.name" . }} --create-namespace
 ```
 
-See logs of pod with the follow command:
+## Testing the Watchdog
+
+Create a crashed Pod to see if the watchdog works correctly:
 
 ```bash
-kubectl logs -f deploy/{{ template "chart.name" . }} -n {{ template "chart.name" . }}
+kubectl create namespace test-crash
+kubectl run test-crash --image=busybox --restart=Never -n test-crash -- /bin/sh -c "exit 1"
+```
+
+See logs of watchdog pod with the follow command:
+
+```bash
+kubectl logs -f deploy/helm-watchdog-pod-delete -n helm-watchdog-pod-delete
+```
+
+If everything is ok, the watchdog will display:
+
+```bash
+[INFO] Starting the watchdog...
+[INFO] Monitoring pods with errors...
+[WARNING] Deleting pod: test-crash in namespace: test-crash
 ```
 
 ## Grant Identity Permissions in GKE (Workload Identity)
@@ -108,7 +126,7 @@ See https://github.com/aeciopires/helm-watchdog-pod-delete/releases
 
 ## Problem Statement
 
-In Kubernetes, applications running as Pods may sometimes enter an undesired state such as ``CrashLoopBackOff`` or ``Error``. This can happen due to various reasons like memory leaks, unhandled exceptions, or external dependencies failing.
+In Kubernetes, applications running as Pods may sometimes enter an undesired state such as ``CrashLoopBackOff`` or ``Error`` (for example). This can happen due to various reasons like memory leaks, unhandled exceptions, or external dependencies failing.
 
 By default, Kubernetes restarts **containers** inside a Pod but does not recreate the entire **Pod** itself. This can lead to issues where the Pod remains stuck in a broken state and requires manual intervention.
 
@@ -123,7 +141,7 @@ Additionally, ``sidecars`` and ``initContainers`` can introduce challenges:
 The **Helm Watchdog Pod Restart** is a lightweight monitoring solution that:
 
 - Periodically monitors all Pods in specified namespaces.
-- Detects Pods that are in a CrashLoopBackOff or Error state.
+- Detects Pods that are in a CrashLoopBackOff or Error state (for example).
 - Automatically deletes these Pods, triggering a fresh restart.
 - Supports monitoring all namespaces or a specific list of namespaces.
 - Allows excluding certain namespaces (e.g., kube-system, monitoring).

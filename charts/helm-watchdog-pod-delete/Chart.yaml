@@ -6,7 +6,7 @@ keywords:
   - kubernetes
   - helm
 type: application
-version: 0.1.2
+version: 0.2.0
 appVersion: "0.0.0"
 sources:
   - https://github.com/aeciopires/helm-watchdog-pod-delete

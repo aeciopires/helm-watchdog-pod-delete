@@ -64,7 +64,7 @@ spec:
                       continue
                     fi
                     if echo "$status" | grep -qE "$ERROR_STATUSES"; then
-                      echo "[WARNING] Recreating pod: $pod in namespace: $ns"
+                      echo "[WARNING] Deleting pod: $pod in namespace: $ns"
                       kubectl delete pod $pod -n $ns
                     fi
                   done
@@ -76,7 +76,7 @@ spec:
                     fi
                     kubectl get pods -n "$ns" --no-headers | awk '{print $1, $3}' | while read pod status; do
                       if echo "$status" | grep -qE "$ERROR_STATUSES"; then
-                        echo "[WARNING] Recreating pod: $pod in namespace: $ns"
+                        echo "[WARNING] Deleting pod: $pod in namespace: $ns"
                         kubectl delete pod $pod -n $ns
                       fi
                     done
