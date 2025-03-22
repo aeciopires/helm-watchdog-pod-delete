@@ -3,6 +3,25 @@ entries:
   helm-watchdog-pod-delete:
   - apiVersion: v2
     appVersion: 0.0.0
+    created: "2025-03-22T20:22:31.489027845Z"
+    description: A Helm chart to delete pods with errors
+    digest: c97ae9d3af2a82b21f987f72737843fc2d46b67fbd625e1d0af9a654850319e8
+    keywords:
+    - monitoring
+    - kubernetes
+    - helm
+    maintainers:
+    - name: Aecio Pires
+      url: https://github.com/aeciopires
+    name: helm-watchdog-pod-delete
+    sources:
+    - https://github.com/aeciopires/helm-watchdog-pod-delete
+    type: application
+    urls:
+    - https://github.com/aeciopires/helm-watchdog-pod-delete/releases/download/helm-watchdog-pod-delete-0.2.0/helm-watchdog-pod-delete-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
+    appVersion: 0.0.0
     created: "2025-03-21T11:07:51.20642171Z"
     description: A Helm chart to delete pods with errors
     digest: b8dc79071533a93e17cd9ab986e32db6dbe696eafcf2c8ad51ed0370f1f461b3
@@ -58,4 +77,4 @@ entries:
     urls:
     - https://github.com/aeciopires/helm-watchdog-pod-delete/releases/download/helm-watchdog-pod-delete-0.1.0/helm-watchdog-pod-delete-0.1.0.tgz
     version: 0.1.0
-generated: "2025-03-21T11:07:51.206433172Z"
+generated: "2025-03-22T20:22:31.489043624Z"
