@@ -5,7 +5,7 @@
 #---------------------------
 
 URL=https://github.com/aeciopires/helm-watchdog-pod-delete/
-HELM_IMAGE=alpine/helm:3.17.2
+HELM_IMAGE=alpine/helm:3.18.4
 HELM_DOCS_IMAGE=jnorwood/helm-docs:v1.14.2
 KNOWN_TARGETS=helm
 

@@ -1,6 +1,6 @@
 # helm-watchdog-pod-delete
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square)  [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
 )](https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete)
 
 A Helm chart to delete pods with errors
@@ -182,10 +182,10 @@ Change the values according to the need of the environment in ``helm-watchdog-po
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
 | fullnameOverride | string | `""` | Completely replaces the rest of the logic in the template. Reference: https://stackoverflow.com/questions/63838705/what-is-the-difference-between-fullnameoverride-and-nameoverride-in-helm |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"bitnami/kubectl","tag":"1.32"}` | Image configuration. |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"alpine/kubectl","tag":"1.34.1"}` | Image configuration. |
 | image.pullPolicy | string | `"IfNotPresent"` | Pull policy image |
-| image.repository | string | `"bitnami/kubectl"` | Image repository. |
-| image.tag | string | `"1.32"` | Image tag. |
+| image.repository | string | `"alpine/kubectl"` | Image repository. |
+| image.tag | string | `"1.34.1"` | Image tag. |
 | imagePullSecrets | list | `[]` | Reference to one or more secrets to be used when pulling images.  For example:  imagePullSecrets:    - name: "image-pull-secret" |
 | nameOverride | string | `""` | Replaces the name of the chart in the Chart.yaml file, when this is used to construct Kubernetes object names. Reference: https://stackoverflow.com/questions/63838705/what-is-the-difference-between-fullnameoverride-and-nameoverride-in-helm |
 | nodeSelector | object | `{}` | nodeSelector configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
@@ -203,9 +203,9 @@ Change the values according to the need of the environment in ``helm-watchdog-po
 | tolerations | list | `[]` | Tolerations configurations. Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | volumeMounts | list | `[{"mountPath":"/var/run/secrets/kubernetes.io/serviceaccount","name":"kube-api-access","readOnly":true}]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[{"name":"kube-api-access","projected":{"sources":[{"serviceAccountToken":{"path":"token"}},{"configMap":{"items":[{"key":"ca.crt","path":"ca.crt"}],"name":"kube-root-ca.crt"}}]}}]` | Additional volumes on the output Deployment definition. |
-| watchdog | object | `{"checkInterval":120,"clusterRole":{"rules":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","delete"]},{"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list"]}]},"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |
+| watchdog | object | `{"checkInterval":120,"clusterRole":{"rules":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","delete","watch"]},{"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list"]}]},"errorStatuses":"CrashLoopBackOff|Error|OOMKilled","excludeNamespaces":["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"],"namespaces":[]}` | Watchdog configuration. |
 | watchdog.checkInterval | int | `120` | Interval in seconds to check pods. |
-| watchdog.clusterRole | object | `{"rules":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","delete"]},{"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list"]}]}` | Grant the same permissions to watchdog pod. More info: https://kubernetes.io/docs/reference/access-authn-authz/rbac/ |
+| watchdog.clusterRole | object | `{"rules":[{"apiGroups":[""],"resources":["pods"],"verbs":["get","list","delete","watch"]},{"apiGroups":[""],"resources":["namespaces"],"verbs":["get","list"]}]}` | Grant the same permissions to watchdog pod. More info: https://kubernetes.io/docs/reference/access-authn-authz/rbac/ |
 | watchdog.errorStatuses | string | `"CrashLoopBackOff|Error|OOMKilled"` | List of error pod statuses. |
 | watchdog.excludeNamespaces | list | `["default","helm-watchdog-pod-delete","kube-system","kube-node-lease","kube-public","gke-managed-cim","gke-managed-filestorecsi","gke-managed-system","gmp-public","gmp-system"]` | List of namespaces that should be ignored |
 | watchdog.namespaces | list | `[]` | List of namespaces to monitor. If empty, monitor all. |

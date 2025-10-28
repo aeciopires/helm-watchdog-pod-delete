@@ -4,11 +4,11 @@ replicaCount: 1
 # -- Image configuration.
 image:
   # -- Image repository.
-  repository: bitnami/kubectl
+  repository: alpine/kubectl
   # -- Pull policy image
   pullPolicy: IfNotPresent
   # -- Image tag.
-  tag: "1.32"
+  tag: "1.34.1"
 
 # -- Reference to one or more secrets to be used when pulling images.
 #
@@ -52,7 +52,7 @@ watchdog:
     rules:
       - apiGroups: [""]
         resources: ["pods"]
-        verbs: ["get", "list", "delete"]
+        verbs: ["get", "list", "delete", "watch"]
       - apiGroups: [""]
         resources: ["namespaces"]
         verbs: ["get", "list"]
