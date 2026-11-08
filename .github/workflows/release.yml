@@ -201,7 +201,11 @@ jobs:
             exit 1
           fi
 
+          # cosign does not read Helm's registry credentials (~/.config/helm/registry/config.json);
+          # it uses the Docker config (~/.docker/config.json), so log in there too.
+          printf '%s' "${GITHUB_TOKEN}" | docker login ghcr.io --username "${ACTOR}" --password-stdin
           cosign sign --yes "${oci_repo}/${CHART_NAME}@${digest}"
+          docker logout ghcr.io
           helm registry logout ghcr.io
 
           {
