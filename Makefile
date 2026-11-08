@@ -151,7 +151,7 @@ lint: ## Run helm lint --strict with the default values and each file in ci/
 
 .PHONY: unittest
 unittest: ## Run the unit tests (helm-unittest) in charts/*/unittests
-	$(HELM) unittest --color --strict -f 'unittests/*_test.yaml' $(CHART_DIR)
+	$(HELM) unittest --color=always --strict -f 'unittests/*_test.yaml' $(CHART_DIR)
 
 .PHONY: template
 template: ## Render the chart for each file in ci/ and check that unsupported Kubernetes fails
