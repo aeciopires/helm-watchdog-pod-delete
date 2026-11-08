@@ -1,15 +1,53 @@
-apiVersion: v2 # Don't change this
+apiVersion: v2 # Don't change this. Supported by Helm 3 and Helm 4.
 name: helm-watchdog-pod-delete
 description: A Helm chart to delete pods with errors
 keywords:
   - monitoring
   - kubernetes
   - helm
+  - watchdog
+  - crashloopbackoff
 type: application
-version: 0.3.0
-appVersion: "0.0.0"
+# Chart version. Follows Semantic Versioning 2.0.0 (https://semver.org).
+# It MUST match the git tag used to publish the release (see CONTRIBUTING.md).
+version: 1.0.0
+# Version of kubectl (container image alpine/kubectl) used by the watchdog.
+# It is used as the default image tag when image.tag is empty.
+appVersion: "1.37.2"
+# Minimum supported Kubernetes version.
+kubeVersion: ">=1.34.0-0"
+home: https://github.com/aeciopires/helm-watchdog-pod-delete
 sources:
   - https://github.com/aeciopires/helm-watchdog-pod-delete
 maintainers:
   - name: Aecio Pires
     url: https://github.com/aeciopires
+annotations:
+  artifacthub.io/license: GPL-3.0
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/images: |
+    - name: kubectl
+      image: docker.io/alpine/kubectl:1.37.2
+  artifacthub.io/changes: |
+    - kind: changed
+      description: "Requires Kubernetes >= 1.34 and is built, tested and published with Helm 4"
+    - kind: changed
+      description: "Default image updated to alpine/kubectl:1.37.2 (image.tag now defaults to appVersion)"
+    - kind: changed
+      description: "Container runs as non-root with read-only root filesystem by default (Pod Security Standards restricted)"
+    - kind: added
+      description: "New rbac.create value, decoupling ClusterRole/ClusterRoleBinding from serviceAccount.create"
+    - kind: added
+      description: "Helm test hook validating RBAC permissions (tests.enabled)"
+    - kind: added
+      description: "Chart published as OCI artifact in oci://ghcr.io/aeciopires/helm-charts"
+    - kind: fixed
+      description: "NOTES.txt referenced the wrong Deployment name"
+    - kind: fixed
+      description: "Watchdog did not handle SIGTERM, delaying pod termination by terminationGracePeriodSeconds"
+    - kind: fixed
+      description: "Rendering of empty livenessProbe/readinessProbe as null"
+    - kind: fixed
+      description: "ClusterRole name collision when serviceAccount.create=false"
+    - kind: fixed
+      description: "Watchdog could delete pods in its own namespace"

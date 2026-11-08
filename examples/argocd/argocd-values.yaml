@@ -1,0 +1,36 @@
+# Minimal values for the argo-cd Helm chart, intended ONLY for local tests in kind.
+# Do not use these values in production.
+#
+# Install:  make argocd-install
+#
+# References:
+# https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
+# https://argo-cd.readthedocs.io/en/stable/operator-manual/argocd-cmd-params-cm-yaml/
+global:
+  domain: localhost
+
+configs:
+  params:
+    # TLS is not needed for the port-forward used in local tests
+    server.insecure: true
+  cm:
+    # Not needed in local tests
+    statusbadge.enabled: false
+    exec.enabled: false
+
+dex:
+  enabled: false
+
+notifications:
+  enabled: false
+
+applicationSet:
+  replicas: 1
+
+redis:
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi

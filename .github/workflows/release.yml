@@ -1,0 +1,222 @@
+name: Release Chart
+
+# Runs ONLY when a Semantic Version tag is pushed (e.g. 1.2.3 or 1.2.3-rc.1).
+# Pipeline: validate (static tests) -> e2e (kind, Kubernetes >= 1.34) -> release.
+# The release is published ONLY if all tests pass:
+#   - GitHub Releases + GitHub Pages (Helm repository https://aeciopires.github.io/helm-watchdog-pod-delete)
+#   - OCI registry oci://ghcr.io/<owner>/helm-charts (signed with cosign keyless)
+#
+# Security best practices applied:
+#   - Third-party actions pinned by commit SHA (updated by Dependabot)
+#   - Default permissions are empty; each job requests only what it needs
+#   - Untrusted values (github.*) are passed to scripts through env vars, never inline
+#   - Tool versions pinned in mise.toml (the same used locally)
+#
+# References:
+# https://github.com/helm/chart-releaser-action
+# https://helm.sh/docs/topics/registries/
+# https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MISE_VERSION: "2026.11.4"
+  CHART_NAME: helm-watchdog-pod-delete
+
+jobs:
+  validate:
+    name: Static tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+        with:
+          version: ${{ env.MISE_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: make install-deps
+
+      - name: Check Semantic Version (tag == Chart.yaml version) and CHANGELOG
+        env:
+          TAG: ${{ github.ref_name }}
+        run: make version-check TAG="${TAG}"
+
+      - name: Run static tests (lint, template, unittest, kubeconform, shellcheck, actionlint, security, docs)
+        run: make test
+
+  e2e:
+    name: E2E Kubernetes ${{ matrix.k8s }}${{ matrix.argocd && ' + ArgoCD' || '' }}
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Node images of kind v0.33.0: https://github.com/kubernetes-sigs/kind/releases
+          - k8s: "1.34"
+            image: kindest/node:v1.34.11@sha256:44e222ee2132dab25ff87301682f89eb82c7880ea3a1bf543bfe9708fd08d67d
+            argocd: false
+          - k8s: "1.35"
+            image: kindest/node:v1.35.8@sha256:07b2536e30b803ed61d1677a79df6115f798ce64c80f9e22f6ed45afd09323c0
+            argocd: false
+          - k8s: "1.36"
+            image: kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+            argocd: false
+          - k8s: "1.37"
+            image: kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
+            argocd: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+        with:
+          version: ${{ env.MISE_VERSION }}
+          cache: true
+
+      - name: Create kind cluster (1 control-plane + 2 workers)
+        env:
+          KIND_NODE_IMAGE: ${{ matrix.image }}
+        run: make kind-create KIND_NODE_IMAGE="${KIND_NODE_IMAGE}"
+
+      - name: E2E test with Helm 4
+        run: make e2e
+
+      - name: Install ArgoCD
+        if: matrix.argocd
+        run: make argocd-install
+
+      - name: E2E test with ArgoCD (local chart from OCI registry)
+        if: matrix.argocd
+        run: make e2e-argocd
+
+      - name: Debug information
+        if: failure()
+        run: |
+          kubectl --context kind-watchdog get nodes -o wide || true
+          kubectl --context kind-watchdog get pods -A -o wide || true
+          kubectl --context kind-watchdog get events -A --sort-by=.lastTimestamp | tail -50 || true
+          kubectl --context kind-watchdog -n argocd get applications -o yaml || true
+
+      - name: Delete kind cluster
+        if: always()
+        run: make kind-delete
+
+  release:
+    name: Publish release
+    needs: [validate, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write # GitHub release, tag and gh-pages branch
+      packages: write # push the chart to ghcr.io
+      id-token: write # cosign keyless signature (OIDC)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          # chart-releaser pushes the index to the gh-pages branch
+          persist-credentials: true
+
+      - name: Configure Git
+        env:
+          ACTOR: ${{ github.actor }}
+        run: |
+          git config user.name "${ACTOR}"
+          git config user.email "${ACTOR}@users.noreply.github.com"
+
+      - name: Install tools (mise.toml)
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+        with:
+          version: ${{ env.MISE_VERSION }}
+          cache: true
+
+      - name: Package chart with Helm 4
+        run: make package
+
+      - name: Mark as latest only stable versions
+        id: latest
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "${TAG}" == *-* ]]; then
+            echo "mark_as_latest=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "mark_as_latest=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Publish in GitHub Releases and GitHub Pages
+        uses: helm/chart-releaser-action@92c6b97fa9f664492a2592e0d1d80bc6bf378957 # v1.9.0
+        with:
+          charts_dir: charts
+          skip_packaging: true
+          skip_existing: true
+          mark_as_latest: ${{ steps.latest.outputs.mark_as_latest }}
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish in OCI registry (ghcr.io) and sign with cosign
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+          OWNER: ${{ github.repository_owner }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          owner="${OWNER,,}"
+          oci_repo="ghcr.io/${owner}/helm-charts"
+          package=".cr-release-packages/${CHART_NAME}-${TAG}.tgz"
+
+          printf '%s' "${GITHUB_TOKEN}" | helm registry login ghcr.io --username "${ACTOR}" --password-stdin
+          push_output="$(helm push "${package}" "oci://${oci_repo}" 2>&1)"
+          echo "${push_output}"
+          digest="$(awk '/^Digest:/ {print $2}' <<< "${push_output}")"
+          if [[ -z "${digest}" ]]; then
+            echo "::error::Could not get the digest of the pushed chart"
+            exit 1
+          fi
+
+          cosign sign --yes "${oci_repo}/${CHART_NAME}@${digest}"
+          helm registry logout ghcr.io
+
+          {
+            echo "### OCI artifact"
+            echo ""
+            echo "- Chart: \`oci://${oci_repo}/${CHART_NAME}\`"
+            echo "- Version: \`${TAG}\`"
+            echo "- Digest: \`${digest}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Update release notes from CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          make --silent release-notes OCI_OWNER="${OWNER,,}" > release-notes.md
+          gh release edit "${CHART_NAME}-${TAG}" --notes-file release-notes.md

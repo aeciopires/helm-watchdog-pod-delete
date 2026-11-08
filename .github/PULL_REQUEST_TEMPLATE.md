@@ -21,5 +21,14 @@ For fast feedback, please @-mention maintainers.
 *(optional, in `fixes #<issue number>(, fixes #<issue_number>, ...)` format, will close that issue when PR gets merged)*
   - fixes #
 
+#### Checklist
+
+- [ ] `make test` passes (lint, unittest, kubeconform, shellcheck, actionlint, trivy, docs)
+- [ ] `make e2e` passes in the local kind cluster (`make kind-create`)
+- [ ] Unit tests added/updated in `charts/helm-watchdog-pod-delete/unittests/`
+- [ ] New values documented (`# --` comments) and added to `values.schema.json`
+- [ ] `make docs` executed
+- [ ] Changes added to the `[Unreleased]` section of `CHANGELOG.md`
+
 #### Special notes for your reviewer:
 

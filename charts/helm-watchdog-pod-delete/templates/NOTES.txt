@@ -1,2 +1,19 @@
-1. See the logs of {{ .Release.Name }}
-  kubectl logs -f deploy/{{ .Release.Name }} --namespace {{ .Release.Namespace }}
+The watchdog {{ include "helm-watchdog-pod-delete.fullname" . }} was deployed in namespace {{ .Release.Namespace }}.
+
+1. See the logs of the watchdog:
+
+  kubectl logs -f deploy/{{ include "helm-watchdog-pod-delete.fullname" . }} --namespace {{ .Release.Namespace }}
+
+2. Pods with status matching "{{ .Values.watchdog.errorStatuses }}" will be deleted every {{ .Values.watchdog.checkInterval }} seconds in:
+{{- if .Values.watchdog.namespaces }}
+  namespaces: {{ .Values.watchdog.namespaces | join ", " }}
+{{- else }}
+  all namespaces
+{{- end }}
+  excluding: {{ include "helm-watchdog-pod-delete.excludeNamespaces" . | replace " " ", " }}
+{{- if .Values.tests.enabled }}
+
+3. Validate the RBAC permissions of the watchdog:
+
+  helm test {{ .Release.Name }} --namespace {{ .Release.Namespace }}
+{{- end }}

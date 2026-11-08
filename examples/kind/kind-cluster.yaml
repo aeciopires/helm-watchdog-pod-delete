@@ -1,0 +1,31 @@
+# kind cluster with 3 nodes: 1 control-plane (master) and 2 workers.
+#
+# Create:  make kind-create
+# Delete:  make kind-delete
+#
+# The Kubernetes version is defined by the node image. The Makefile passes
+# "--image $(KIND_NODE_IMAGE)", which overrides the image of all nodes, so you can
+# test other versions with:  make kind-create KIND_NODE_IMAGE=kindest/node:v1.34.11
+#
+# References:
+# https://kind.sigs.k8s.io/docs/user/configuration/
+# https://github.com/kubernetes-sigs/kind/releases (list of node images per kind release)
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: watchdog
+networking:
+  # Expose the API server only on localhost
+  apiServerAddress: "127.0.0.1"
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
+    labels:
+      node-role: master
+  - role: worker
+    image: kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
+    labels:
+      node-role: worker
+  - role: worker
+    image: kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
+    labels:
+      node-role: worker

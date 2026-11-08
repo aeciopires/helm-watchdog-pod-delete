@@ -1,0 +1,26 @@
+# Unit tests executed by helm-unittest (https://github.com/helm-unittest/helm-unittest)
+# Run: make unittest
+suite: helm test hook
+templates:
+  - templates/tests/test-rbac.yaml
+release:
+  name: wd
+  namespace: watchdog
+tests:
+  - it: renders the helm test pod by default
+    asserts:
+      - isKind:
+          of: Pod
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: test
+      - equal:
+          path: spec.serviceAccountName
+          value: wd-helm-watchdog-pod-delete
+
+  - it: does not render the helm test pod when tests.enabled is false
+    set:
+      tests.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

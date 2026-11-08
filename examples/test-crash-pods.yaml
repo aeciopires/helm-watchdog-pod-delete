@@ -1,0 +1,82 @@
+# Workloads that fail on purpose, used to validate the watchdog.
+#
+# Apply:   make test-crash
+# Remove:  make test-crash-clean
+#
+# - test-crash-error:      bare Pod that exits with code 1 (status: Error).
+#                          The watchdog deletes it and it is NOT recreated.
+# - test-crash-loop:       Deployment whose container always fails (status: CrashLoopBackOff).
+#                          The watchdog deletes the pod and the ReplicaSet recreates it.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-crash
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-crash-error
+  namespace: test-crash
+  labels:
+    app: test-crash-error
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: crash
+      image: busybox:1.37.0
+      command: ["/bin/sh", "-c", "echo 'failing on purpose'; exit 1"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        limits:
+          memory: 16Mi
+        requests:
+          cpu: 5m
+          memory: 8Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-crash-loop
+  namespace: test-crash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-crash-loop
+  template:
+    metadata:
+      labels:
+        app: test-crash-loop
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: crash
+          image: busybox:1.37.0
+          command: ["/bin/sh", "-c", "echo 'crashing on purpose'; sleep 2; exit 1"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            limits:
+              memory: 16Mi
+            requests:
+              cpu: 5m
+              memory: 8Mi

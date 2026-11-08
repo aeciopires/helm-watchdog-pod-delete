@@ -1,0 +1,81 @@
+# Unit tests executed by helm-unittest (https://github.com/helm-unittest/helm-unittest)
+# Run: make unittest
+suite: rbac and service account
+templates:
+  - templates/serviceaccount.yaml
+  - templates/rbac.yaml
+release:
+  name: wd
+  namespace: watchdog
+tests:
+  - it: creates the ServiceAccount by default
+    template: templates/serviceaccount.yaml
+    asserts:
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.name
+          value: wd-helm-watchdog-pod-delete
+      - equal:
+          path: automountServiceAccountToken
+          value: false
+
+  - it: does not create the ServiceAccount when serviceAccount.create is false
+    template: templates/serviceaccount.yaml
+    set:
+      serviceAccount.create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: creates ClusterRole and ClusterRoleBinding by default
+    template: templates/rbac.yaml
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ClusterRole
+        documentIndex: 0
+      - isKind:
+          of: ClusterRoleBinding
+        documentIndex: 1
+      - equal:
+          path: subjects[0].namespace
+          value: watchdog
+        documentIndex: 1
+
+  - it: grants delete on pods
+    template: templates/rbac.yaml
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["get", "list", "delete", "watch"]
+
+  - it: keeps RBAC when using an existing ServiceAccount (and names ClusterRole after the release)
+    template: templates/rbac.yaml
+    set:
+      serviceAccount.create: false
+      serviceAccount.name: my-sa
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: wd-helm-watchdog-pod-delete
+        documentIndex: 0
+      - equal:
+          path: subjects[0].name
+          value: my-sa
+        documentIndex: 1
+
+  - it: does not create RBAC when rbac.create is false
+    template: templates/rbac.yaml
+    set:
+      rbac.create: false
+    asserts:
+      - hasDocuments:
+          count: 0

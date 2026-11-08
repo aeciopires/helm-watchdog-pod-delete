@@ -60,3 +60,19 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Container image (image.tag defaults to .Chart.AppVersion)
+*/}}
+{{- define "helm-watchdog-pod-delete.image" -}}
+{{- printf "%s:%s" .Values.image.repository (.Values.image.tag | default .Chart.AppVersion | toString) }}
+{{- end }}
+
+{{/*
+Space-separated list of namespaces ignored by the watchdog.
+The release namespace is always ignored, so the watchdog never deletes itself.
+*/}}
+{{- define "helm-watchdog-pod-delete.excludeNamespaces" -}}
+{{- $namespaces := concat (list .Release.Namespace) (.Values.watchdog.excludeNamespaces | default list) }}
+{{- $namespaces | uniq | join " " }}
+{{- end }}

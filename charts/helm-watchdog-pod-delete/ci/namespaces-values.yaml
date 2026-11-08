@@ -1,0 +1,14 @@
+# Values used by "make template" / "make kubeconform" and the CI pipeline.
+# Monitor only some namespaces, with custom interval and statuses.
+watchdog:
+  checkInterval: 30
+  errorStatuses: "CrashLoopBackOff|Error|OOMKilled|Init:CrashLoopBackOff|Init:Error"
+  namespaces:
+    - app1
+    - app2
+  excludeNamespaces:
+    - kube-system
+livenessProbe:
+  exec:
+    command: ["kubectl", "version", "--client"]
+  periodSeconds: 60

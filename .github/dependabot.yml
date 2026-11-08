@@ -1,4 +1,6 @@
 ---
+# Keeps the GitHub Actions (pinned by commit SHA) updated.
+# Tool versions are pinned in mise.toml and must be updated manually (see REQUIREMENTS.md).
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -7,3 +9,10 @@ updates:
       interval: "weekly"
       time: "09:00"
       timezone: "Europe/Berlin"
+    # Wait some days before proposing a new version (protection against compromised releases)
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"

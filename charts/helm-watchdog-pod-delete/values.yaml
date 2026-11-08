@@ -7,8 +7,8 @@ image:
   repository: alpine/kubectl
   # -- Pull policy image
   pullPolicy: IfNotPresent
-  # -- Image tag.
-  tag: "1.34.1"
+  # -- Image tag. If empty, the `appVersion` of `Chart.yaml` is used.
+  tag: ""
 
 # -- Reference to one or more secrets to be used when pulling images.
 #
@@ -28,14 +28,16 @@ terminationGracePeriodSeconds: 30
 watchdog:
   # -- Interval in seconds to check pods.
   checkInterval: 120
-  # -- List of error pod statuses.
+  # -- Extended regular expression (grep -E) matched against the STATUS column of `kubectl get pods`.
+  # Examples of statuses: CrashLoopBackOff, Error, OOMKilled, Init:CrashLoopBackOff, Init:Error.
   errorStatuses: "CrashLoopBackOff|Error|OOMKilled"
   # -- List of namespaces to monitor. If empty, monitor all.
   namespaces: []
     #- "namespace1"
     #- "namespace2"
     #- "namespace3"
-  # -- List of namespaces that should be ignored
+  # -- List of namespaces that should be ignored.
+  # The namespace where the chart is installed is always ignored.
   excludeNamespaces:
     - "default"
     - "helm-watchdog-pod-delete"
@@ -47,7 +49,7 @@ watchdog:
     - "gke-managed-system"
     - "gmp-public"
     - "gmp-system"
-  # -- Grant the same permissions to watchdog pod. More info: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+  # -- Grant the same permissions to watchdog pod. Used only if `rbac.create=true`. More info: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
   clusterRole:
     rules:
       - apiGroups: [""]
@@ -61,12 +63,23 @@ serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
   # -- Automatically mount a ServiceAccount's API credentials?
-  automount: true
+  # Disabled by default because the token is mounted explicitly by the `kube-api-access`
+  # projected volume (see `volumes` and `volumeMounts`). If you remove that volume, set it to true.
+  automount: false
   # -- Annotations to add to the service account
   annotations: {}
   # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+rbac:
+  # -- Specifies whether the ClusterRole and ClusterRoleBinding should be created.
+  # The rules are defined in `watchdog.clusterRole.rules`.
+  create: true
+
+tests:
+  # -- Create the pod used by `helm test` to validate the RBAC permissions of the watchdog.
+  enabled: true
 
 # -- Annotations to add to the pods
 podAnnotations: {}
@@ -74,31 +87,40 @@ podAnnotations: {}
 # -- Labels to add to the pod
 podLabels: {}
 
-# -- Pod security configurations
-podSecurityContext: {}
-  # fsGroup: 2000
+# -- Pod security configurations. Compliant with the Pod Security Standards "restricted" profile.
+# Reference: https://kubernetes.io/docs/concepts/security/pod-security-standards/
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
 
 # -- Security Context configurations. Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 
 # -- Resource requests and limits for the pod
 resources:
   limits:
+    cpu: 200m
     memory: 128Mi
   requests:
     cpu: 50m
-    memory: 10Mi
+    memory: 32Mi
 
-#livenessProbe: {}
-#readinessProbe: {}
+# -- Liveness probe configuration. Disabled if empty. Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe: {}
+# -- Readiness probe configuration. Disabled if empty. Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+readinessProbe: {}
 
 # -- Additional volumes on the output Deployment definition.
+# A writable `emptyDir` is always mounted in `/tmp` (used as HOME by kubectl).
 volumes:
   - name: kube-api-access
     projected:

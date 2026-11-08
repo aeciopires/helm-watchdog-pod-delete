@@ -1,0 +1,23 @@
+# Values to test the chart in the local kind cluster.
+# Used by "make deploy", "make deploy-argocd" (copied to the ArgoCD Application) and "make e2e".
+watchdog:
+  # Check every 10 seconds to speed up local tests
+  checkInterval: 10
+  errorStatuses: "CrashLoopBackOff|Error|OOMKilled|Init:CrashLoopBackOff|Init:Error"
+  # Monitor all namespaces except the excluded ones
+  namespaces: []
+  excludeNamespaces:
+    - default
+    - kube-system
+    - kube-node-lease
+    - kube-public
+    - local-path-storage
+    - argocd
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi

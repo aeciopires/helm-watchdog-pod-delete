@@ -398,3 +398,12 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Helm chart development (helm-watchdog-pod-delete)
+.cr-release-packages/
+.cr-index/
+charts/*/packages/
+charts/*/.helm/
+.mermaid-out/
+*.tgz
+release-notes.md

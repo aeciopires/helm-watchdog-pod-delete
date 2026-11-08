@@ -21,3 +21,9 @@
 .idea/
 *.tmproj
 .vscode/
+# Files used only for development and tests
+README.md.gotmpl
+unittests/
+ci/
+.helm/
+packages/

@@ -1,0 +1,2 @@
+# Values used by "make template" / "make kubeconform" and the CI pipeline.
+# Default values (no overrides).

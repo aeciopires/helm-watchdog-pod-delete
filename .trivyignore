@@ -1,0 +1,23 @@
+# Accepted findings of "trivy config" (make security). Every entry MUST have a justification.
+
+# KSV-0048: ClusterRole can delete pods.
+# Accepted: deleting pods with errors is the purpose of the watchdog. The ClusterRole only
+# grants get/list/watch/delete on pods and get/list on namespaces (least privilege).
+KSV-0048
+
+# KSV-0110: workload in the "default" namespace.
+# Accepted: false positive of the static render. The chart is installed in the namespace
+# chosen by the user (--namespace), the documentation recommends a dedicated namespace.
+KSV-0110
+
+# KSV-0125: image from an "untrusted" registry (docker.io).
+# Accepted: the registry allowlist is organization specific. Users can mirror the image and
+# change image.repository. The image tag is pinned.
+KSV-0125
+
+# KSV-0036: service account token mounted.
+# Accepted: the watchdog needs the token to call the Kubernetes API. The pod sets
+# automountServiceAccountToken=false and mounts a short-lived projected token explicitly
+# (volume kube-api-access). The check reads the field from Deployment.spec instead of the
+# pod template, so it always flags the explicit mount.
+KSV-0036

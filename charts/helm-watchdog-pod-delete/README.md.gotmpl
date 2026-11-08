@@ -1,5 +1,5 @@
 {{ template "chart.header" . }}
-{{ template "chart.typeBadge" . }} {{ template "chart.versionBadge" . }} [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
+{{ template "chart.typeBadge" . }} {{ template "chart.versionBadge" . }} {{ template "chart.appVersionBadge" . }} ![Kubernetes: >=1.34](https://img.shields.io/badge/Kubernetes-%3E%3D1.34-informational?style=flat-square) ![Helm: 4](https://img.shields.io/badge/Helm-4-informational?style=flat-square) [![Downloads](https://img.shields.io/github/downloads/aeciopires/helm-watchdog-pod-delete/total?label=Downloads%20All%20Releases
 )](https://tooomm.github.io/github-release-stats/?username=aeciopires&repository=helm-watchdog-pod-delete)
 
 {{ template "chart.description" . }}
@@ -11,8 +11,13 @@
 - [Table of Contents](#table-of-contents)
 - [Prerequisites](#prerequisites)
 - [Installing the Chart](#installing-the-chart)
+  - [From the OCI registry (recommended)](#from-the-oci-registry-recommended)
+  - [From the Helm repository](#from-the-helm-repository)
+  - [Verifying the signature of the chart](#verifying-the-signature-of-the-chart)
   - [Testing the Watchdog](#testing-the-watchdog)
   - [Grant Identity Permissions in GKE (Workload Identity)](#grant-identity-permissions-in-gke-workload-identity)
+- [Upgrading](#upgrading)
+  - [To 1.0.0](#to-100)
 - [Uninstalling the Chart](#uninstalling-the-chart)
 - [Changelog](#changelog)
 - [Motivation and use cases](#motivation-and-use-cases)
@@ -20,72 +25,110 @@
   - [Solution](#solution)
   - [Use Cases](#use-cases)
 - [How It Works](#how-it-works)
+- [Security](#security)
 - [Parameters](#parameters)
 
 <!-- TOC -->
 
 # Prerequisites
 
-- Install the kubectl, helm and helm-docs commands following the instructions of the file [REQUIREMENTS.md](../../REQUIREMENTS.md).
+- Kubernetes 1.34 or newer (`kubeVersion: {{ template "chart.kubeVersion" . }}`)
+- Helm 4 (recommended). The chart uses `apiVersion: v2`, so Helm 3 also works.
+- To develop and test the chart, see [REQUIREMENTS.md](../../REQUIREMENTS.md) and [examples/README.md](../../examples/README.md).
 
 # Installing the Chart
 
 - Access a Kubernetes cluster.
+- Change the values according to the need of the environment in a `values.yaml` file. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-- Change the values according to the need of the environment in ``{{ template "chart.name" . }}/values.yaml`` file. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+## From the OCI registry (recommended)
 
-Add Helm repository:
+Show the chart information:
+
+```bash
+helm show chart oci://ghcr.io/aeciopires/helm-charts/{{ template "chart.name" . }} --version {{ template "chart.version" . }}
+```
+
+Test the installation:
+
+```bash
+helm upgrade --install {{ template "chart.name" . }} oci://ghcr.io/aeciopires/helm-charts/{{ template "chart.name" . }} \
+  --version {{ template "chart.version" . }} \
+  -f values.yaml \
+  -n {{ template "chart.name" . }} --create-namespace \
+  --dry-run=server
+```
+
+Install/upgrade the chart with the release name `{{ template "chart.name" . }}`:
+
+```bash
+helm upgrade --install {{ template "chart.name" . }} oci://ghcr.io/aeciopires/helm-charts/{{ template "chart.name" . }} \
+  --version {{ template "chart.version" . }} \
+  -f values.yaml \
+  -n {{ template "chart.name" . }} --create-namespace \
+  --wait --rollback-on-failure
+```
+
+> `--rollback-on-failure` is the Helm 4 name of the Helm 3 flag `--atomic`.
+
+## From the Helm repository
 
 ```bash
 helm repo add {{ template "chart.name" . }} https://aeciopires.github.io/{{ template "chart.name" . }}
-```
-
-Update the list helm charts available for installation. This is recommend prior to installation/upgrade:
-
-```bash
 helm repo update
-```
-
-Get all versions of helm chart:
-
-```bash
 helm search repo {{ template "chart.name" . }}/{{ template "chart.name" . }} -l
+
+helm upgrade --install {{ template "chart.name" . }} {{ template "chart.name" . }}/{{ template "chart.name" . }} \
+  --version {{ template "chart.version" . }} \
+  -f values.yaml \
+  -n {{ template "chart.name" . }} --create-namespace \
+  --wait --rollback-on-failure
 ```
 
-- Test the installation with command:
+## Verifying the signature of the chart
+
+The chart published in the OCI registry is signed with [cosign](https://docs.sigstore.dev/) (keyless) by the GitHub Actions workflow of this repository:
 
 ```bash
-helm upgrade --install {{ template "chart.name" . }} -f values.yaml {{ template "chart.name" . }}/{{ template "chart.name" . }} -n {{ template "chart.name" . }} --create-namespace --dry-run
-```
-
-- To install/upgrade the chart with the release name `{{ template "chart.name" . }}`:
-
-```bash
-helm upgrade --install {{ template "chart.name" . }} -f values.yaml {{ template "chart.name" . }}/{{ template "chart.name" . }} -n {{ template "chart.name" . }} --create-namespace
+cosign verify ghcr.io/aeciopires/helm-charts/{{ template "chart.name" . }}:{{ template "chart.version" . }} \
+  --certificate-identity-regexp '^https://github.com/aeciopires/helm-watchdog-pod-delete/\.github/workflows/release\.yml@refs/tags/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 ## Testing the Watchdog
+
+Validate the RBAC permissions of the watchdog:
+
+```bash
+helm test {{ template "chart.name" . }} -n {{ template "chart.name" . }} --logs
+```
 
 Create a crashed Pod to see if the watchdog works correctly:
 
 ```bash
 kubectl create namespace test-crash
-kubectl run test-crash --image=busybox --restart=Never -n test-crash -- /bin/sh -c "exit 1"
+kubectl run test-crash --image=busybox:1.37.0 --restart=Never -n test-crash -- /bin/sh -c "exit 1"
 ```
 
 See logs of watchdog pod with the follow command:
 
 ```bash
-kubectl logs -f deploy/helm-watchdog-pod-delete -n helm-watchdog-pod-delete
+kubectl logs -f deploy/{{ template "chart.name" . }} -n {{ template "chart.name" . }}
 ```
 
 If everything is ok, the watchdog will display:
 
 ```bash
-[INFO] Starting the watchdog...
-[INFO] Monitoring pods with errors...
-[WARNING] Deleting pod: test-crash in namespace: test-crash
+2026-11-08T15:10:20Z [INFO] Starting the watchdog...
+2026-11-08T15:10:20Z [INFO] Namespaces: <all>
+2026-11-08T15:10:20Z [INFO] Excluded namespaces: helm-watchdog-pod-delete default kube-system ...
+2026-11-08T15:10:20Z [INFO] Error statuses: CrashLoopBackOff|Error|OOMKilled
+2026-11-08T15:10:20Z [INFO] Check interval: 120s
+2026-11-08T15:10:20Z [INFO] Monitoring pods with errors...
+2026-11-08T15:12:20Z [WARNING] Deleting pod: test-crash in namespace: test-crash (status: Error)
 ```
+
+To test everything locally (kind + ArgoCD + local chart), see [examples/README.md](../../examples/README.md).
 
 ## Grant Identity Permissions in GKE (Workload Identity)
 
@@ -110,6 +153,21 @@ GCP_SERVICE_ACCOUNT@PROJECT.iam.gserviceaccount.com \
 
 - This allows the container to use correct credentials within the cluster.
 
+# Upgrading
+
+## To 1.0.0
+
+This is a major release with breaking changes. Review your values before upgrading:
+
+- Kubernetes >= 1.34 is required.
+- The container runs as non-root with read-only root filesystem by default (`podSecurityContext` and `securityContext`).
+- `serviceAccount.automount` defaults to `false`. The token is mounted by the `kube-api-access` projected volume. If you removed this volume from `volumes`, set `serviceAccount.automount=true`.
+- `image.tag` defaults to `""` (uses `appVersion`).
+- ClusterRole/ClusterRoleBinding are controlled by `rbac.create` and named after the release fullname.
+- The namespace of the release is always excluded from monitoring.
+
+See all changes in [CHANGELOG.md](../../CHANGELOG.md).
+
 # Uninstalling the Chart
 
 To uninstall/delete the `{{ template "chart.name" . }}` deployment:
@@ -120,7 +178,7 @@ helm uninstall {{ template "chart.name" . }} -n {{ template "chart.name" . }}
 
 # Changelog
 
-See https://github.com/aeciopires/helm-watchdog-pod-delete/releases
+See [CHANGELOG.md](../../CHANGELOG.md) and https://github.com/aeciopires/helm-watchdog-pod-delete/releases
 
 # Motivation and use cases
 
@@ -138,7 +196,7 @@ Additionally, ``sidecars`` and ``initContainers`` can introduce challenges:
 
 ## Solution
 
-The **Helm Watchdog Pod Restart** is a lightweight monitoring solution that:
+The **Helm Watchdog Pod Delete** is a lightweight monitoring solution that:
 
 - Periodically monitors all Pods in specified namespaces.
 - Detects Pods that are in a CrashLoopBackOff or Error state (for example).
@@ -147,7 +205,7 @@ The **Helm Watchdog Pod Restart** is a lightweight monitoring solution that:
 - Allows excluding certain namespaces (e.g., kube-system, monitoring).
 - Ensures sidecar containers and initContainers are properly restarted when needed.
 - Helps mitigate race conditions by ensuring Pods are recreated when external dependencies become available.
-- Runs as a Kubernetes Deployment using a bitnami/kubectl container.
+- Runs as a Kubernetes Deployment using an `alpine/kubectl` container.
 - Uses Helm for easy deployment and configuration.
 
 ## Use Cases
@@ -163,13 +221,72 @@ This solution is useful for:
 
 # How It Works
 
-The watchdog runs as a single Deployment in Kubernetes.
+The chart installs a small "self-healing" component: a single Deployment that runs a shell loop with `kubectl` (image `alpine/kubectl`). It does not replace Kubernetes probes or controllers; it complements them by recreating the **whole Pod** (including `initContainers` and sidecars) when it is stuck in a failure status.
 
-It continuously checks for Pods in a CrashLoopBackOff or Error state.
+Resources created by the chart:
 
-When it finds a failed Pod, it deletes it, allowing Kubernetes to schedule a new Pod (if managed by ReplicaSet, Deployment, DemonSet or StatefulSet).
+- **Deployment** running the watchdog loop (non-root, read-only root filesystem).
+- **ServiceAccount** used by the watchdog to talk to the Kubernetes API.
+- **ClusterRole** and **ClusterRoleBinding** (when `rbac.create=true`) allowing it to list and delete Pods in any namespace.
+- **Test Pod** (`helm test`) that validates the RBAC permissions.
+
+```mermaid
+flowchart LR
+  subgraph release["Namespace of the release (always excluded)"]
+    deploy["Deployment<br/>helm-watchdog-pod-delete<br/>(alpine/kubectl)"]
+    sa["ServiceAccount"]
+  end
+
+  rbac["ClusterRole + ClusterRoleBinding<br/>pods: get, list, watch, delete<br/>namespaces: get, list"]
+  api["Kubernetes API server"]
+
+  subgraph apps["Monitored namespaces<br/>(watchdog.namespaces or all, minus watchdog.excludeNamespaces)"]
+    pod["Pod in CrashLoopBackOff / Error / OOMKilled"]
+    ctrl["Controller<br/>Deployment / ReplicaSet /<br/>StatefulSet / DaemonSet"]
+    newpod["New healthy Pod"]
+  end
+
+  deploy -- "uses" --> sa
+  sa -- "bound to" --> rbac
+  deploy -- "kubectl get pods" --> api
+  deploy -- "kubectl delete pod" --> api
+  api -- "deletes" --> pod
+  ctrl -- "recreates" --> newpod
+```
+
+Every `watchdog.checkInterval` seconds it runs `kubectl get pods` and compares the `STATUS` column with the extended regular expression `watchdog.errorStatuses` (e.g. `CrashLoopBackOff|Error|OOMKilled`).
+
+When it finds a failed Pod, it deletes it, allowing Kubernetes to schedule a new Pod (if managed by ReplicaSet, Deployment, DaemonSet or StatefulSet). Pods without a controller (bare Pods) are not recreated.
+
+```mermaid
+flowchart TD
+  start(["Watchdog starts"]) --> list{"watchdog.namespaces<br/>is empty?"}
+  list -- "yes" --> all["kubectl get pods --all-namespaces"]
+  list -- "no" --> some["kubectl get pods -n &lt;ns&gt;<br/>for each listed namespace"]
+  all --> each["For each Pod: namespace, name, STATUS"]
+  some --> each
+  each --> excluded{"Namespace in watchdog.excludeNamespaces<br/>or namespace of the release?"}
+  excluded -- "yes" --> skip["Ignore the Pod"]
+  excluded -- "no" --> match{"STATUS matches<br/>watchdog.errorStatuses?"}
+  match -- "no" --> skip
+  match -- "yes" --> del["kubectl delete pod --wait=false<br/>log WARNING"]
+  del --> recreate["Controller recreates the Pod<br/>(bare Pods are not recreated)"]
+  skip --> sleep["sleep watchdog.checkInterval seconds"]
+  recreate --> sleep
+  sleep --> list
+```
+
+The namespaces in `watchdog.excludeNamespaces` and the namespace of the release are never changed.
 
 The monitoring interval and namespace filtering can be configured via Helm values.
+
+# Security
+
+- The container runs as non-root, with read-only root filesystem, without privilege escalation, without Linux capabilities and with the `RuntimeDefault` seccomp profile (Pod Security Standards `restricted`).
+- The ClusterRole grants only `get`, `list`, `watch` and `delete` on pods and `get`, `list` on namespaces (customizable in `watchdog.clusterRole.rules`).
+- The ServiceAccount token is mounted explicitly by a projected volume (`automountServiceAccountToken: false`).
+- The chart is scanned with [trivy](https://trivy.dev) in each release. Accepted findings are justified in [.trivyignore](../../.trivyignore).
+- The chart published in the OCI registry is signed with cosign. See [Verifying the signature of the chart](#verifying-the-signature-of-the-chart).
 
 # Parameters
 

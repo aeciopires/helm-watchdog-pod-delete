@@ -1,0 +1,59 @@
+# ArgoCD Application that deploys the LOCAL version of the chart.
+#
+# How it works ("make deploy-argocd"):
+#   1. The chart in charts/helm-watchdog-pod-delete is packaged with a unique pre-release
+#      version (<Chart.yaml version>-dev.<timestamp>) and pushed with Helm 4 to the local OCI
+#      registry (oci://localhost:5001/charts).
+#   2. This Application uses the semver constraint ">=0.0.0-0", so ArgoCD always deploys the
+#      most recent version pushed, including pre-releases.
+#
+# Apply:   make deploy-argocd
+# Remove:  make undeploy-argocd
+#
+# Reference: https://argo-cd.readthedocs.io/en/stable/user-guide/helm/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: helm-watchdog-pod-delete
+  namespace: argocd
+  # Delete the Kubernetes resources when the Application is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  project: default
+  source:
+    repoURL: kind-registry:5000/charts
+    chart: helm-watchdog-pod-delete
+    targetRevision: ">=0.0.0-0"
+    helm:
+      releaseName: helm-watchdog-pod-delete
+      # Keep in sync with examples/helm/values-local.yaml
+      valuesObject:
+        watchdog:
+          checkInterval: 10
+          errorStatuses: "CrashLoopBackOff|Error|OOMKilled|Init:CrashLoopBackOff|Init:Error"
+          namespaces: []
+          excludeNamespaces:
+            - default
+            - kube-system
+            - kube-node-lease
+            - kube-public
+            - local-path-storage
+            - argocd
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helm-watchdog-pod-delete
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

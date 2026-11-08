@@ -1,0 +1,24 @@
+# ArgoCD repository pointing to the local OCI registry created by "make kind-create".
+#
+# The registry runs as the docker container "kind-registry" attached to the "kind" docker
+# network, so it is reachable from inside the cluster as kind-registry:5000 (plain HTTP)
+# and from the host as localhost:5001.
+#
+# Applied by:  make deploy-argocd
+#
+# Reference: https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#helm
+apiVersion: v1
+kind: Secret
+metadata:
+  name: local-oci-registry
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+stringData:
+  name: local-oci-registry
+  type: helm
+  url: kind-registry:5000/charts
+  enableOCI: "true"
+  # The local registry does not use TLS. Never use this in production.
+  insecureOCIForceHttp: "true"
